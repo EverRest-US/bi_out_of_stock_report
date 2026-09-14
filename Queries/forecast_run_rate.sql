@@ -18,7 +18,7 @@ WITH sku_totals AS (
         AND cf.ecf_date <= DATE_FORMAT(CURDATE(), '%Y-%m-01') + INTERVAL 3 MONTH # three months from current month
     GROUP BY p.oproduct_sku
 )
-SELECT oproduct_sku,
+SELECT oproduct_sku as product,
        forecast_months,
        forecast_qty_total,
        period_start,
