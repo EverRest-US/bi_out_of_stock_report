@@ -24,26 +24,37 @@ WITH product_lead AS (
                                          AND i.product_id = pv.oproduct_id
         LEFT JOIN analytics.alead_days ld ON v.ovendor_id = ld.avendor_id AND ld.alocation_id IN (12, 44, 47)
     GROUP BY i.product, i.everrest_tier, i.sinomax_tier, v.ovendor_code, v.ovendor_id
+),
+avg_price AS (
+    SELECT ip.product,
+           AVG(ip.unit_price) as price
+    FROM analytics.bc_us_item_prices ip
+    WHERE TRUE
+        AND ip.ending_date IS NULL
+    GROUP BY ip.product
 )
-SELECT product,
+SELECT pl.product,
        'everrest' AS entity,
-       everrest_tier AS tier,
-       vendor_number,
-       avg_lead_days
-FROM product_lead
+       pl.everrest_tier AS tier,
+       pl.vendor_number,
+       pl.avg_lead_days,
+       ap.price
+FROM product_lead pl
+LEFT JOIN avg_price ap ON pl.product = ap.product
 WHERE TRUE
-    AND everrest_tier IS NOT NULL
-    AND avg_lead_days IS NOT NULL
+    AND pl.everrest_tier IS NOT NULL
+    AND pl.avg_lead_days IS NOT NULL
 
 UNION ALL
 
-SELECT product,
+SELECT pl.product,
        'sinomax' AS entity,
-       sinomax_tier AS tier,
-       vendor_number,
-       avg_lead_days
-FROM product_lead
+       pl.sinomax_tier AS tier,
+       pl.vendor_number,
+       pl.avg_lead_days,
+       ap.price
+FROM product_lead pl
+LEFT JOIN avg_price ap ON pl.product = ap.product
 WHERE TRUE
-    AND sinomax_tier IS NOT NULL
-    AND avg_lead_days IS NOT NULL
-ORDER BY product, entity;
+    AND pl.sinomax_tier IS NOT NULL
+    AND avg_lead_days IS NOT NULL;
