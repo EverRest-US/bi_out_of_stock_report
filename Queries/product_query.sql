@@ -1,5 +1,4 @@
--- One row per product per entity, with that entity's tier.
--- Product, vendor and lead time repeat across the two rows by design.
+-- One row per product, with each entity's tier in its own column.
 
 WITH product_lead AS (
     SELECT
@@ -34,27 +33,14 @@ avg_price AS (
     GROUP BY ip.product
 )
 SELECT pl.product,
-       'everrest' AS entity,
-       pl.everrest_tier AS tier,
+       pl.everrest_tier,
+       pl.sinomax_tier,
        pl.vendor_number,
        pl.avg_lead_days,
        ap.price
 FROM product_lead pl
 LEFT JOIN avg_price ap ON pl.product = ap.product
 WHERE TRUE
-    AND pl.everrest_tier IS NOT NULL
-    AND pl.avg_lead_days IS NOT NULL
-
-UNION ALL
-
-SELECT pl.product,
-       'sinomax' AS entity,
-       pl.sinomax_tier AS tier,
-       pl.vendor_number,
-       pl.avg_lead_days,
-       ap.price
-FROM product_lead pl
-LEFT JOIN avg_price ap ON pl.product = ap.product
-WHERE TRUE
-    AND pl.sinomax_tier IS NOT NULL
-    AND avg_lead_days IS NOT NULL;
+    -- keep the product if it carries a tier on either side
+    AND (pl.everrest_tier IS NOT NULL OR pl.sinomax_tier IS NOT NULL)
+    AND pl.avg_lead_days IS NOT NULL;
