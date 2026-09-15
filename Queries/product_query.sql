@@ -18,10 +18,11 @@ WITH product_lead AS (
             END as avg_lead_days
     FROM
         analytics.bc_us_items i
-        JOIN hq.ovendors v ON i.vendor_number = v.ovendor_code
+        LEFT JOIN hq.ovendors v ON i.vendor_number = v.ovendor_code
         LEFT JOIN hq.oproductsvendors pv ON v.ovendor_id = pv.ovendor_id
                                          AND i.product_id = pv.oproduct_id
         LEFT JOIN analytics.alead_days ld ON v.ovendor_id = ld.avendor_id AND ld.alocation_id IN (12, 44, 47)
+    WHERE i.product = 538
     GROUP BY i.product, i.everrest_tier, i.sinomax_tier, v.ovendor_code, v.ovendor_id
 ),
 avg_price AS (
@@ -42,5 +43,4 @@ FROM product_lead pl
 LEFT JOIN avg_price ap ON pl.product = ap.product
 WHERE TRUE
     -- keep the product if it carries a tier on either side
-    AND (pl.everrest_tier IS NOT NULL OR pl.sinomax_tier IS NOT NULL)
-    AND pl.avg_lead_days IS NOT NULL;
+    AND (pl.everrest_tier IS NOT NULL OR pl.sinomax_tier IS NOT NULL);
